@@ -1,0 +1,20 @@
+# Dependências
+node_modules/
+backend/node_modules/
+frontend/node_modules/
+
+# Arquivos de ambiente (exceto .env.example)
+.env
+backend/.env
+frontend/.env
+
+# Build de produção
+frontend/dist/
+backend/dist/
+
+# Logs e sistema
+*.log
+npm-debug.log*
+.DS_Store
+Thumbs.db
+.vscode/
