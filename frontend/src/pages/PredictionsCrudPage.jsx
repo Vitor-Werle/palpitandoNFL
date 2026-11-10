@@ -14,9 +14,9 @@ export default function PredictionsCrudPage({
   const [predictedHomeScore, setPredictedHomeScore] = useState('');
   const [predictedAwayScore, setPredictedAwayScore] = useState('');
   const [notes, setNotes] = useState('');
+  const [formError, setFormError] = useState('');
 
-  // Filtros de listagem
-  const [filterScope, setFilterScope] = useState('ALL');
+  // Filtro de semana (apenas palpites da conta ativa são exibidos)
   const [filterWeek, setFilterWeek] = useState('ALL');
 
   // Modal de edição
@@ -26,10 +26,16 @@ export default function PredictionsCrudPage({
   const [editHomeScore, setEditHomeScore] = useState('');
   const [editAwayScore, setEditAwayScore] = useState('');
   const [editNotes, setEditNotes] = useState('');
+  const [editError, setEditError] = useState('');
 
   // Modal de exclusão
   const deleteDialogRef = useRef(null);
   const [deletingPrediction, setDeletingPrediction] = useState(null);
+
+  // Palpites exclusivos do usuário logado (não cruza palpites entre as contas)
+  const userPredictions = predictions.filter(
+    (pred) => currentUser && Number(pred.userId) === Number(currentUser.id)
+  );
 
   const openGames = games.filter((g) => !g.isLocked);
   const selectedGame = games.find((g) => g.id === Number(selectedGameId)) || null;
@@ -41,9 +47,45 @@ export default function PredictionsCrudPage({
     }
   }, [games]);
 
+  // Limpa erros ao trocar de conta
+  useEffect(() => {
+    setFormError('');
+    setEditError('');
+  }, [currentUser]);
+
+  /**
+   * Valida se os pontos do time vencedor são estritamente maiores que os do perdedor
+   */
+  const validateScores = (winnerAbbr, homeScoreRaw, awayScoreRaw, gameObj) => {
+    const hasHome = homeScoreRaw !== '' && homeScoreRaw !== null && homeScoreRaw !== undefined;
+    const hasAway = awayScoreRaw !== '' && awayScoreRaw !== null && awayScoreRaw !== undefined;
+
+    if (!hasHome && !hasAway) {
+      return null;
+    }
+
+    if (hasHome !== hasAway) {
+      return 'Informe o placar dos dois times ou deixe ambos em branco.';
+    }
+
+    const homeVal = Number(homeScoreRaw);
+    const awayVal = Number(awayScoreRaw);
+
+    if (winnerAbbr === gameObj.homeTeamAbbr && homeVal <= awayVal) {
+      return `Os pontos do vencedor (${gameObj.homeTeamAbbr}) devem ser maiores que os do perdedor (${gameObj.awayTeamAbbr}).`;
+    }
+
+    if (winnerAbbr === gameObj.awayTeamAbbr && awayVal <= homeVal) {
+      return `Os pontos do vencedor (${gameObj.awayTeamAbbr}) devem ser maiores que os do perdedor (${gameObj.homeTeamAbbr}).`;
+    }
+
+    return null;
+  };
+
   const handleGameSelectionChange = (e) => {
     const newGameId = e.target.value;
     setSelectedGameId(newGameId);
+    setFormError('');
     const found = games.find((g) => g.id === Number(newGameId));
     if (found) {
       setPredictedWinner(found.homeTeamAbbr);
@@ -52,7 +94,30 @@ export default function PredictionsCrudPage({
 
   const handleCreateSubmit = (e) => {
     e.preventDefault();
-    if (!currentUser || !selectedGameId || !predictedWinner) return;
+    setFormError('');
+
+    if (!currentUser || !selectedGameId || !predictedWinner || !selectedGame) return;
+
+    // 1. Verifica se o usuário já fez palpite para esta mesma partida
+    const alreadyPredicted = userPredictions.some(
+      (p) => Number(p.gameId) === Number(selectedGameId)
+    );
+    if (alreadyPredicted) {
+      setFormError('Você já realizou um palpite para esta partida.');
+      return;
+    }
+
+    // 2. Verifica se os pontos do vencedor são maiores que os do perdedor
+    const scoreValidationMsg = validateScores(
+      predictedWinner,
+      predictedHomeScore,
+      predictedAwayScore,
+      selectedGame
+    );
+    if (scoreValidationMsg) {
+      setFormError(scoreValidationMsg);
+      return;
+    }
 
     onCreatePrediction({
       userId: currentUser.id,
@@ -66,6 +131,7 @@ export default function PredictionsCrudPage({
         setPredictedHomeScore('');
         setPredictedAwayScore('');
         setNotes('');
+        setFormError('');
       }
     });
   };
@@ -84,6 +150,7 @@ export default function PredictionsCrudPage({
         : ''
     );
     setEditNotes(prediction.notes || '');
+    setEditError('');
 
     if (editDialogRef.current) {
       editDialogRef.current.showModal();
@@ -96,11 +163,25 @@ export default function PredictionsCrudPage({
       editDialogRef.current.returnValue = '';
     }
     setEditingPrediction(null);
+    setEditError('');
   };
 
   const handleUpdateSubmit = (e) => {
     e.preventDefault();
-    if (!editingPrediction) return;
+    setEditError('');
+
+    if (!editingPrediction || !editingPrediction.game) return;
+
+    const scoreValidationMsg = validateScores(
+      editWinner,
+      editHomeScore,
+      editAwayScore,
+      editingPrediction.game
+    );
+    if (scoreValidationMsg) {
+      setEditError(scoreValidationMsg);
+      return;
+    }
 
     onUpdatePrediction(editingPrediction.id, {
       predictedWinner: editWinner,
@@ -138,10 +219,7 @@ export default function PredictionsCrudPage({
     });
   };
 
-  const filteredPredictions = predictions.filter((pred) => {
-    if (filterScope === 'MINE' && currentUser && pred.userId !== currentUser.id) {
-      return false;
-    }
+  const filteredPredictions = userPredictions.filter((pred) => {
     if (filterWeek !== 'ALL' && pred.game && String(pred.game.week) !== filterWeek) {
       return false;
     }
@@ -182,12 +260,17 @@ export default function PredictionsCrudPage({
                 {openGames.length === 0 ? (
                   <option value="">Nenhuma partida aberta no momento</option>
                 ) : (
-                  openGames.map((g) => (
-                    <option key={g.id} value={g.id}>
-                      Semana {g.week}: {g.awayTeamAbbr} @ {g.homeTeamAbbr} ({g.awayTeam} vs{' '}
-                      {g.homeTeam})
-                    </option>
-                  ))
+                  openGames.map((g) => {
+                    const alreadyPicked = userPredictions.some(
+                      (p) => Number(p.gameId) === Number(g.id)
+                    );
+                    return (
+                      <option key={g.id} value={g.id}>
+                        Semana {g.week}: {g.awayTeamAbbr} @ {g.homeTeamAbbr} ({g.awayTeam} vs{' '}
+                        {g.homeTeam}){alreadyPicked ? ' — Já palpitado' : ''}
+                      </option>
+                    );
+                  })
                 )}
               </select>
             </div>
@@ -202,7 +285,10 @@ export default function PredictionsCrudPage({
                       className={`team-choice-btn ${
                         predictedWinner === selectedGame.awayTeamAbbr ? 'selected' : ''
                       }`}
-                      onClick={() => setPredictedWinner(selectedGame.awayTeamAbbr)}
+                      onClick={() => {
+                        setPredictedWinner(selectedGame.awayTeamAbbr);
+                        setFormError('');
+                      }}
                     >
                       <span className="team-abbr">{selectedGame.awayTeamAbbr}</span>
                       <span className="team-name">{selectedGame.awayTeam}</span>
@@ -213,7 +299,10 @@ export default function PredictionsCrudPage({
                       className={`team-choice-btn ${
                         predictedWinner === selectedGame.homeTeamAbbr ? 'selected' : ''
                       }`}
-                      onClick={() => setPredictedWinner(selectedGame.homeTeamAbbr)}
+                      onClick={() => {
+                        setPredictedWinner(selectedGame.homeTeamAbbr);
+                        setFormError('');
+                      }}
                     >
                       <span className="team-abbr">{selectedGame.homeTeamAbbr}</span>
                       <span className="team-name">{selectedGame.homeTeam}</span>
@@ -233,7 +322,10 @@ export default function PredictionsCrudPage({
                       max="99"
                       placeholder="Ex: 24"
                       value={predictedAwayScore}
-                      onChange={(e) => setPredictedAwayScore(e.target.value)}
+                      onChange={(e) => {
+                        setPredictedAwayScore(e.target.value);
+                        setFormError('');
+                      }}
                     />
                   </div>
 
@@ -248,7 +340,10 @@ export default function PredictionsCrudPage({
                       max="99"
                       placeholder="Ex: 27"
                       value={predictedHomeScore}
-                      onChange={(e) => setPredictedHomeScore(e.target.value)}
+                      onChange={(e) => {
+                        setPredictedHomeScore(e.target.value);
+                        setFormError('');
+                      }}
                     />
                   </div>
                 </div>
@@ -275,6 +370,12 @@ export default function PredictionsCrudPage({
               </>
             )}
 
+            {formError && (
+              <p className="inline-error-msg" role="alert">
+                {formError}
+              </p>
+            )}
+
             <button
               type="submit"
               className="btn btn-primary btn-block"
@@ -285,23 +386,19 @@ export default function PredictionsCrudPage({
           </form>
         </section>
 
-        {/* Lista de Palpites */}
+        {/* Lista de Palpites exclusiva da conta logada */}
         <section className="card" aria-labelledby="read-heading">
           <div className="card-header-flex">
-            <h2 id="read-heading" className="section-title">
-              Palpites Registrados ({filteredPredictions.length})
-            </h2>
+            <div>
+              <h2 id="read-heading" className="section-title">
+                Meus Palpites ({filteredPredictions.length})
+              </h2>
+              <p className="muted-text">
+                Exibindo exclusivamente os palpites de <strong>{currentUser.username}</strong>
+              </p>
+            </div>
 
             <div className="filter-bar">
-              <select
-                aria-label="Filtrar palpites por usuário"
-                value={filterScope}
-                onChange={(e) => setFilterScope(e.target.value)}
-              >
-                <option value="ALL">Todos os Usuários</option>
-                <option value="MINE">Meus Palpites</option>
-              </select>
-
               <select
                 aria-label="Filtrar palpites por semana"
                 value={filterWeek}
@@ -322,13 +419,13 @@ export default function PredictionsCrudPage({
           >
             <table className="responsive-data-table predictions-table">
               <caption id="predictions-table-caption" className="sr-only">
-                Lista de palpites registrados na plataforma
+                Lista de palpites registrados na conta de {currentUser.username}
               </caption>
               <thead>
                 <tr>
-                  <th>Usuário</th>
                   <th>Partida</th>
-                  <th>Palpite</th>
+                  <th>Vencedor Escolhido</th>
+                  <th>Placar Previsto</th>
                   <th>Resultado</th>
                   <th>Observação</th>
                   <th>Ações</th>
@@ -338,7 +435,7 @@ export default function PredictionsCrudPage({
                 {filteredPredictions.length === 0 ? (
                   <tr>
                     <td colSpan="6" className="empty-cell">
-                      Nenhum palpite encontrado.
+                      Você ainda não possui palpites para esta seleção.
                     </td>
                   </tr>
                 ) : (
@@ -352,14 +449,6 @@ export default function PredictionsCrudPage({
                     return (
                       <tr key={pred.id}>
                         <th>
-                          <strong>{pred.user ? pred.user.username : `Usuário #${pred.userId}`}</strong>
-                          {pred.user && (
-                            <span className="sub-meta">
-                              {pred.user.state} • {pred.user.favoriteTeam}
-                            </span>
-                          )}
-                        </th>
-                        <td>
                           {game ? (
                             <>
                               <strong>
@@ -375,16 +464,18 @@ export default function PredictionsCrudPage({
                           ) : (
                             `Jogo #${pred.gameId}`
                           )}
-                        </td>
+                        </th>
                         <td>
                           <span className="winner-highlight">{pred.predictedWinner}</span>
+                        </td>
+                        <td>
                           {pred.predictedHomeScore !== null && pred.predictedAwayScore !== null ? (
-                            <span className="sub-meta">
+                            <span>
                               {game ? game.awayTeamAbbr : 'VIS'} {pred.predictedAwayScore} x{' '}
                               {pred.predictedHomeScore} {game ? game.homeTeamAbbr : 'CASA'}
                             </span>
                           ) : (
-                            <span className="sub-meta">Apenas vencedor</span>
+                            <span className="sub-meta">Sem placar</span>
                           )}
                         </td>
                         <td>{renderOutcomeBadge(pred)}</td>
@@ -445,7 +536,10 @@ export default function PredictionsCrudPage({
                   className={`team-choice-btn ${
                     editWinner === editingPrediction.game.awayTeamAbbr ? 'selected' : ''
                   }`}
-                  onClick={() => setEditWinner(editingPrediction.game.awayTeamAbbr)}
+                  onClick={() => {
+                    setEditWinner(editingPrediction.game.awayTeamAbbr);
+                    setEditError('');
+                  }}
                 >
                   <span className="team-abbr">{editingPrediction.game.awayTeamAbbr}</span>
                   <span className="team-name">{editingPrediction.game.awayTeam}</span>
@@ -455,7 +549,10 @@ export default function PredictionsCrudPage({
                   className={`team-choice-btn ${
                     editWinner === editingPrediction.game.homeTeamAbbr ? 'selected' : ''
                   }`}
-                  onClick={() => setEditWinner(editingPrediction.game.homeTeamAbbr)}
+                  onClick={() => {
+                    setEditWinner(editingPrediction.game.homeTeamAbbr);
+                    setEditError('');
+                  }}
                 >
                   <span className="team-abbr">{editingPrediction.game.homeTeamAbbr}</span>
                   <span className="team-name">{editingPrediction.game.homeTeam}</span>
@@ -474,7 +571,10 @@ export default function PredictionsCrudPage({
                   min="0"
                   max="99"
                   value={editAwayScore}
-                  onChange={(e) => setEditAwayScore(e.target.value)}
+                  onChange={(e) => {
+                    setEditAwayScore(e.target.value);
+                    setEditError('');
+                  }}
                 />
               </div>
               <div className="form-group">
@@ -487,7 +587,10 @@ export default function PredictionsCrudPage({
                   min="0"
                   max="99"
                   value={editHomeScore}
-                  onChange={(e) => setEditHomeScore(e.target.value)}
+                  onChange={(e) => {
+                    setEditHomeScore(e.target.value);
+                    setEditError('');
+                  }}
                 />
               </div>
             </div>
@@ -501,6 +604,12 @@ export default function PredictionsCrudPage({
                 onChange={(e) => setEditNotes(e.target.value)}
               />
             </div>
+
+            {editError && (
+              <p className="inline-error-msg" role="alert">
+                {editError}
+              </p>
+            )}
 
             <div className="dialog-actions">
               <button type="button" className="btn btn-outline" onClick={closeEditModal}>
@@ -524,7 +633,7 @@ export default function PredictionsCrudPage({
         {deletingPrediction && (
           <div>
             <p className="dialog-subtitle">
-              Tem certeza que deseja excluir o palpite no vencedor{' '}
+              Tem certeza que deseja excluir o seu palpite no vencedor{' '}
               <strong>{deletingPrediction.predictedWinner}</strong>?
             </p>
             <div className="dialog-actions">

@@ -569,11 +569,22 @@ body {
 }
 
 .predictions-table {
-  --label-2: 'Partida';
-  --label-3: 'Palpite';
+  --label-2: 'Vencedor Escolhido';
+  --label-3: 'Placar Previsto';
   --label-4: 'Resultado';
   --label-5: 'Observação';
   --label-6: 'Ações';
+}
+
+.inline-error-msg {
+  margin: 0;
+  padding: 0.55rem 0.75rem;
+  border-radius: 6px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: var(--danger);
+  font-size: 0.82rem;
+  font-weight: 500;
 }
 
 .ranking-table {

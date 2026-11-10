@@ -23,7 +23,7 @@ const Prediction = sequelize.define(
       validate: {
         notIn: {
           args: [['TIE', 'EMPATE', 'DRAW']],
-          msg: 'RN04: O usuário deverá selecionar estritamente um time vencedor, sem opção de aposta em empate.'
+          msg: 'Selecione estritamente um time vencedor, sem opção de aposta em empate.'
         }
       }
     },
@@ -58,7 +58,13 @@ const Prediction = sequelize.define(
   },
   {
     tableName: 'predictions',
-    timestamps: true
+    timestamps: true,
+    indexes: [
+      {
+        unique: true,
+        fields: ['userId', 'gameId']
+      }
+    ]
   }
 );
 

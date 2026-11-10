@@ -47,7 +47,11 @@ export default function App() {
   const loadAllData = useCallback((preferredUserId = null) => {
     setConnectionError(false);
 
-    return Promise.all([fetchUsers(), fetchGames(), fetchPredictions()])
+    return Promise.all([
+      fetchUsers(),
+      fetchGames(),
+      preferredUserId ? fetchPredictions({ userId: preferredUserId }) : Promise.resolve([])
+    ])
       .then(([usersData, gamesData, predictionsData]) => {
         setUsers(usersData);
         setGames(gamesData);
@@ -88,7 +92,10 @@ export default function App() {
   };
 
   const handleUpdatePrediction = (id, payload) => {
-    return updatePrediction(id, payload)
+    return updatePrediction(id, {
+      ...payload,
+      userId: currentUser ? currentUser.id : undefined
+    })
       .then((res) => {
         showToast('success', res.message);
         return loadAllData(currentUser ? currentUser.id : null).then(() => true);
@@ -100,7 +107,7 @@ export default function App() {
   };
 
   const handleDeletePrediction = (id) => {
-    return deletePrediction(id)
+    return deletePrediction(id, currentUser ? currentUser.id : undefined)
       .then((res) => {
         showToast('success', res.message);
         return loadAllData(currentUser ? currentUser.id : null).then(() => true);
@@ -164,6 +171,7 @@ export default function App() {
     const found = users.find((u) => u.id === userId);
     if (found) {
       setCurrentUser(found);
+      loadAllData(found.id);
       showToast('info', `Conta ativa: ${found.username}`);
     }
   };
@@ -221,6 +229,7 @@ export default function App() {
 
   const handleLogout = () => {
     setCurrentUser(null);
+    setPredictions([]);
     showToast('info', 'Sessão encerrada.');
   };
 

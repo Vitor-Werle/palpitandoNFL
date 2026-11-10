@@ -11,6 +11,33 @@ function isGameLockedForPredictions(kickoffTime, status) {
   return diffInHours < 2;
 }
 
+/**
+ * Valida se o placar informado é coerente com o time vencedor selecionado:
+ * Os pontos do time vencedor devem ser maiores que os pontos do time perdedor.
+ */
+function validateWinnerScoreConsistency(predictedWinner, homeScoreVal, awayScoreVal, game) {
+  const hasHome = homeScoreVal !== null && homeScoreVal !== undefined;
+  const hasAway = awayScoreVal !== null && awayScoreVal !== undefined;
+
+  if (!hasHome && !hasAway) {
+    return null;
+  }
+
+  if (hasHome !== hasAway) {
+    return 'Informe o placar dos dois times ou deixe ambos os campos em branco.';
+  }
+
+  if (predictedWinner === game.homeTeamAbbr && homeScoreVal <= awayScoreVal) {
+    return `Os pontos do vencedor (${game.homeTeamAbbr}) devem ser maiores que os do perdedor (${game.awayTeamAbbr}).`;
+  }
+
+  if (predictedWinner === game.awayTeamAbbr && awayScoreVal <= homeScoreVal) {
+    return `Os pontos do vencedor (${game.awayTeamAbbr}) devem ser maiores que os do perdedor (${game.homeTeamAbbr}).`;
+  }
+
+  return null;
+}
+
 exports.getAllPredictions = (req, res) => {
   const { userId, gameId, week } = req.query;
   const whereClause = {};
@@ -86,6 +113,15 @@ exports.createPrediction = (req, res) => {
     });
   }
 
+  const homeScoreVal =
+    predictedHomeScore !== undefined && predictedHomeScore !== '' && predictedHomeScore !== null
+      ? Number(predictedHomeScore)
+      : null;
+  const awayScoreVal =
+    predictedAwayScore !== undefined && predictedAwayScore !== '' && predictedAwayScore !== null
+      ? Number(predictedAwayScore)
+      : null;
+
   let targetGame = null;
 
   Game.findByPk(gameId)
@@ -113,25 +149,31 @@ exports.createPrediction = (req, res) => {
         throw err;
       }
 
-      return Prediction.findOne({ where: { userId, gameId } });
-    })
-    .then((existingPrediction) => {
-      if (existingPrediction) {
-        const err = new Error(
-          'Você já possui um palpite registrado para esta partida. Utilize a opção Editar para alterá-lo.'
-        );
-        err.statusCode = 409;
+      const scoreError = validateWinnerScoreConsistency(
+        predictedWinner,
+        homeScoreVal,
+        awayScoreVal,
+        game
+      );
+      if (scoreError) {
+        const err = new Error(scoreError);
+        err.statusCode = 400;
         throw err;
       }
 
-      const homeScoreVal =
-        predictedHomeScore !== undefined && predictedHomeScore !== '' && predictedHomeScore !== null
-          ? Number(predictedHomeScore)
-          : null;
-      const awayScoreVal =
-        predictedAwayScore !== undefined && predictedAwayScore !== '' && predictedAwayScore !== null
-          ? Number(predictedAwayScore)
-          : null;
+      return Prediction.findOne({
+        where: {
+          userId: Number(userId),
+          gameId: Number(gameId)
+        }
+      });
+    })
+    .then((existingPrediction) => {
+      if (existingPrediction) {
+        const err = new Error('Você já realizou um palpite para esta partida.');
+        err.statusCode = 409;
+        throw err;
+      }
 
       const outcome = evaluatePredictionOutcome(
         {
@@ -180,7 +222,7 @@ exports.createPrediction = (req, res) => {
 
 exports.updatePrediction = (req, res) => {
   const { id } = req.params;
-  const { predictedWinner, predictedHomeScore, predictedAwayScore, notes } = req.body;
+  const { userId, predictedWinner, predictedHomeScore, predictedAwayScore, notes } = req.body;
 
   Prediction.findByPk(id, {
     include: [{ model: Game, as: 'game' }]
@@ -189,6 +231,13 @@ exports.updatePrediction = (req, res) => {
       if (!prediction) {
         const err = new Error('Palpite não encontrado para atualização.');
         err.statusCode = 404;
+        throw err;
+      }
+
+      // Garante que uma conta não altere palpites de outra conta
+      if (userId && Number(userId) !== Number(prediction.userId)) {
+        const err = new Error('Você só pode editar os seus próprios palpites.');
+        err.statusCode = 403;
         throw err;
       }
 
@@ -236,6 +285,20 @@ exports.updatePrediction = (req, res) => {
             : Number(predictedAwayScore)
           : prediction.predictedAwayScore;
 
+      if (prediction.game) {
+        const scoreError = validateWinnerScoreConsistency(
+          nextWinner,
+          homeScoreVal,
+          awayScoreVal,
+          prediction.game
+        );
+        if (scoreError) {
+          const err = new Error(scoreError);
+          err.statusCode = 400;
+          throw err;
+        }
+      }
+
       const outcome = evaluatePredictionOutcome(
         {
           predictedWinner: nextWinner,
@@ -281,6 +344,7 @@ exports.updatePrediction = (req, res) => {
 
 exports.deletePrediction = (req, res) => {
   const { id } = req.params;
+  const { userId } = req.query;
 
   Prediction.findByPk(id)
     .then((prediction) => {
@@ -289,6 +353,14 @@ exports.deletePrediction = (req, res) => {
         err.statusCode = 404;
         throw err;
       }
+
+      // Garante que uma conta não exclua palpites de outra conta
+      if (userId && Number(userId) !== Number(prediction.userId)) {
+        const err = new Error('Você só pode excluir os seus próprios palpites.');
+        err.statusCode = 403;
+        throw err;
+      }
+
       return prediction.destroy();
     })
     .then(() => {

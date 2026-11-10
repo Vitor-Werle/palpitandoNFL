@@ -51,8 +51,9 @@ export function updatePrediction(id, payload) {
   });
 }
 
-export function deletePrediction(id) {
-  return request(`/predictions/${id}`, {
+export function deletePrediction(id, userId) {
+  const query = userId ? `?userId=${userId}` : '';
+  return request(`/predictions/${id}${query}`, {
     method: 'DELETE'
   });
 }
