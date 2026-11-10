@@ -1,9 +1,6 @@
 const bcrypt = require('bcryptjs');
 const { User, Prediction, Game } = require('../models');
 
-/**
- * READ - Listar todos os usuários cadastrados
- */
 exports.getAllUsers = (req, res) => {
   User.findAll({
     attributes: { exclude: ['passwordHash'] },
@@ -25,14 +22,10 @@ exports.getAllUsers = (req, res) => {
     });
 };
 
-/**
- * RANKING - Classificação dos 100 usuários com maior pontuação acumulada e filtros por UF e Time (RN11 a RN15, REQ 014)
- */
 exports.getRanking = (req, res) => {
   const { state, favoriteTeam, includeIneligible } = req.query;
   const whereClause = {};
 
-  // RN15: Por padrão exibe apenas os elegíveis para o ranking oficial da temporada
   if (includeIneligible !== 'true') {
     whereClause.eligibleForRanking = true;
   }
@@ -54,7 +47,7 @@ exports.getRanking = (req, res) => {
       ['hits', 'DESC'],
       ['username', 'ASC']
     ],
-    limit: 100 // RN12: Apresenta os 100 melhores colocados
+    limit: 100
   })
     .then((ranking) => {
       res.status(200).json(ranking);
@@ -67,15 +60,12 @@ exports.getRanking = (req, res) => {
     });
 };
 
-/**
- * CREATE - Cadastro de novo usuário (REQ 002, RN16, RN17, RN20, RN21, RN22, RNF 004)
- */
 exports.registerUser = (req, res) => {
   const { username, email, password, state, favoriteTeam, eligibleForRanking } = req.body;
 
   if (!username || !email || !password || !state || !favoriteTeam) {
     return res.status(400).json({
-      message: 'RN22: São campos obrigatórios: nome de usuário, e-mail, senha, estado (UF) e time favorito da NFL.'
+      message: 'Preencha todos os campos obrigatórios: nome de usuário, e-mail, senha, estado (UF) e time favorito.'
     });
   }
 
@@ -98,7 +88,7 @@ exports.registerUser = (req, res) => {
       const plain = newUser.get({ plain: true });
       delete plain.passwordHash;
       res.status(201).json({
-        message: `Usuário cadastrado com sucesso! Código de validação gerado (RN21): ${plain.verificationCode}`,
+        message: 'Conta criada com sucesso!',
         user: plain
       });
     })
@@ -110,9 +100,6 @@ exports.registerUser = (req, res) => {
     });
 };
 
-/**
- * LOGIN - Autenticação com e-mail e senha (REQ 001, RN20)
- */
 exports.loginUser = (req, res) => {
   const { email, password } = req.body;
 
@@ -158,9 +145,6 @@ exports.loginUser = (req, res) => {
     });
 };
 
-/**
- * UPDATE - Atualizar dados cadastrais do perfil do usuário (REQ 017)
- */
 exports.updateUser = (req, res) => {
   const { id } = req.params;
   const { username, state, favoriteTeam, eligibleForRanking } = req.body;
@@ -185,7 +169,7 @@ exports.updateUser = (req, res) => {
       const plain = updatedUser.get({ plain: true });
       delete plain.passwordHash;
       res.status(200).json({
-        message: 'Perfil atualizado com sucesso (REQ 017)!',
+        message: 'Perfil atualizado com sucesso!',
         user: plain
       });
     })
@@ -198,9 +182,6 @@ exports.updateUser = (req, res) => {
     });
 };
 
-/**
- * DELETE - Excluir conta de usuário em conformidade com a LGPD (RNF 005)
- */
 exports.deleteUser = (req, res) => {
   const { id } = req.params;
 
@@ -215,7 +196,7 @@ exports.deleteUser = (req, res) => {
     })
     .then(() => {
       res.status(200).json({
-        message: 'Conta e palpites vinculados excluídos com sucesso (Conformidade LGPD - RNF 005).'
+        message: 'Conta e palpites vinculados excluídos com sucesso.'
       });
     })
     .catch((error) => {
@@ -227,9 +208,6 @@ exports.deleteUser = (req, res) => {
     });
 };
 
-/**
- * STATS - Painel de estatísticas consolidadas do usuário (RN18 e REQ 015)
- */
 exports.getUserStats = (req, res) => {
   const { id } = req.params;
 

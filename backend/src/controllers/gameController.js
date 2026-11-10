@@ -1,9 +1,6 @@
 const { Game, Prediction } = require('../models');
 const { recalculateAllScores } = require('../utils/scoring');
 
-/**
- * READ - Listar todos os jogos da NFL com cálculo de tendências/porcentagem de votos (REQ 006, REQ 011, REQ 018)
- */
 exports.getAllGames = (req, res) => {
   const { week, season } = req.query;
   const whereClause = {};
@@ -30,7 +27,6 @@ exports.getAllGames = (req, res) => {
         const homePercentage = totalVotes > 0 ? Math.round((homeVotes / totalVotes) * 100) : 50;
         const awayPercentage = totalVotes > 0 ? 100 - homePercentage : 50;
 
-        // Verifica bloqueio RN01/RN09 (2 horas antes do início)
         const now = new Date();
         const kickoff = new Date(plain.kickoffTime);
         const hoursUntilKickoff = (kickoff.getTime() - now.getTime()) / (1000 * 60 * 60);
@@ -60,9 +56,6 @@ exports.getAllGames = (req, res) => {
     });
 };
 
-/**
- * CREATE - Cadastrar novo jogo da NFL
- */
 exports.createGame = (req, res) => {
   const {
     week,
@@ -116,9 +109,6 @@ exports.createGame = (req, res) => {
     });
 };
 
-/**
- * UPDATE - Atualizar placar, status ou horário de uma partida e recalcular automaticamente o Ranking (RN14)
- */
 exports.updateGame = (req, res) => {
   const { id } = req.params;
   const {
@@ -172,7 +162,7 @@ exports.updateGame = (req, res) => {
     })
     .then((updatedGame) => {
       res.status(200).json({
-        message: 'Partida atualizada e pontuação do ranking recalculada automaticamente (RN14)!',
+        message: 'Partida atualizada e pontuação do ranking recalculada automaticamente!',
         game: updatedGame
       });
     })
@@ -185,9 +175,6 @@ exports.updateGame = (req, res) => {
     });
 };
 
-/**
- * DELETE - Excluir uma partida e recalcular pontos
- */
 exports.deleteGame = (req, res) => {
   const { id } = req.params;
 
@@ -215,12 +202,9 @@ exports.deleteGame = (req, res) => {
     });
 };
 
-/**
- * SYNC - Simula ou consome dados de calendário da API Esportiva da NFL (REQ 007)
- */
 exports.syncGamesFromNflApi = (req, res) => {
-  const futureDate1 = new Date(Date.now() + 72 * 60 * 60 * 1000); // Daqui a 3 dias
-  const futureDate2 = new Date(Date.now() + 96 * 60 * 60 * 1000); // Daqui a 4 dias
+  const futureDate1 = new Date(Date.now() + 72 * 60 * 60 * 1000);
+  const futureDate2 = new Date(Date.now() + 96 * 60 * 60 * 1000);
 
   const externalNflFeed = [
     {
@@ -268,7 +252,7 @@ exports.syncGamesFromNflApi = (req, res) => {
     .then((results) => {
       const createdCount = results.filter(([, created]) => created).length;
       res.status(200).json({
-        message: `Sincronização com a API da NFL concluída (REQ 007)! ${createdCount} novo(s) confronto(s) adicionado(s).`,
+        message: `Sincronização concluída! ${createdCount} novo(s) confronto(s) adicionado(s).`,
         createdCount
       });
     })

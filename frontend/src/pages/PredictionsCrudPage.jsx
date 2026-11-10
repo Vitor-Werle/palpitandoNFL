@@ -6,21 +6,20 @@ export default function PredictionsCrudPage({
   predictions,
   onCreatePrediction,
   onUpdatePrediction,
-  onDeletePrediction,
-  onNavigateToGames
+  onDeletePrediction
 }) {
-  // Estado para o formulário de CREATE (Cadastrar novo palpite)
+  // Formulário de Novo Palpite
   const [selectedGameId, setSelectedGameId] = useState('');
   const [predictedWinner, setPredictedWinner] = useState('');
   const [predictedHomeScore, setPredictedHomeScore] = useState('');
   const [predictedAwayScore, setPredictedAwayScore] = useState('');
   const [notes, setNotes] = useState('');
 
-  // Filtros de READ (Consultar/Listar palpites)
-  const [filterScope, setFilterScope] = useState('ALL'); // 'MINE' ou 'ALL'
+  // Filtros de listagem
+  const [filterScope, setFilterScope] = useState('ALL');
   const [filterWeek, setFilterWeek] = useState('ALL');
 
-  // Estado e Ref para o modal nativo <dialog> de UPDATE (Alterar palpite)
+  // Modal de edição
   const editDialogRef = useRef(null);
   const [editingPrediction, setEditingPrediction] = useState(null);
   const [editWinner, setEditWinner] = useState('');
@@ -28,11 +27,10 @@ export default function PredictionsCrudPage({
   const [editAwayScore, setEditAwayScore] = useState('');
   const [editNotes, setEditNotes] = useState('');
 
-  // Estado e Ref para o modal nativo <dialog> de DELETE (Excluir palpite)
+  // Modal de exclusão
   const deleteDialogRef = useRef(null);
   const [deletingPrediction, setDeletingPrediction] = useState(null);
 
-  // Jogos disponíveis para cadastrar palpite (SCHEDULED e > 2h para o início - RN01/RN09)
   const openGames = games.filter((g) => !g.isLocked);
   const selectedGame = games.find((g) => g.id === Number(selectedGameId)) || null;
 
@@ -52,11 +50,9 @@ export default function PredictionsCrudPage({
     }
   };
 
-  // ==================== 1. CREATE (CADASTRAR) ====================
   const handleCreateSubmit = (e) => {
     e.preventDefault();
-    if (!currentUser) return;
-    if (!selectedGameId || !predictedWinner) return;
+    if (!currentUser || !selectedGameId || !predictedWinner) return;
 
     onCreatePrediction({
       userId: currentUser.id,
@@ -74,7 +70,6 @@ export default function PredictionsCrudPage({
     });
   };
 
-  // ==================== 3. UPDATE (ABRIR MODAL E SALVAR) ====================
   const openEditModal = (prediction) => {
     setEditingPrediction(prediction);
     setEditWinner(prediction.predictedWinner);
@@ -119,7 +114,6 @@ export default function PredictionsCrudPage({
     });
   };
 
-  // ==================== 4. DELETE (ABRIR MODAL E CONFIRMAR) ====================
   const openDeleteModal = (prediction) => {
     setDeletingPrediction(prediction);
     if (deleteDialogRef.current) {
@@ -144,7 +138,6 @@ export default function PredictionsCrudPage({
     });
   };
 
-  // ==================== 2. READ (FILTRAGEM DA LISTA) ====================
   const filteredPredictions = predictions.filter((pred) => {
     if (filterScope === 'MINE' && currentUser && pred.userId !== currentUser.id) {
       return false;
@@ -157,12 +150,12 @@ export default function PredictionsCrudPage({
 
   const renderOutcomeBadge = (pred) => {
     const statusMap = {
-      PENDING: { label: '⏳ Aguardando Jogo', className: 'badge-pending' },
-      HIT: { label: `✅ Acertou Vencedor (+1 pt)`, className: 'badge-hit' },
-      EXACT_HIT: { label: `🎯 Placar Exato! (+4 pts)`, className: 'badge-exact' },
-      MISS: { label: `❌ Errou Vencedor (-1 pt)`, className: 'badge-miss' },
-      NEUTRAL: { label: `⚖️ Empate / Neutro (0 pt)`, className: 'badge-neutral' },
-      SUSPENDED: { label: `⏸️ Jogo Adiado (Suspenso)`, className: 'badge-neutral' }
+      PENDING: { label: 'Aguardando', className: 'badge-pending' },
+      HIT: { label: 'Acertou (+1 pt)', className: 'badge-hit' },
+      EXACT_HIT: { label: 'Placar Exato (+4 pts)', className: 'badge-exact' },
+      MISS: { label: 'Errou (-1 pt)', className: 'badge-miss' },
+      NEUTRAL: { label: 'Empate (0 pt)', className: 'badge-neutral' },
+      SUSPENDED: { label: 'Adiado', className: 'badge-neutral' }
     };
     const info = statusMap[pred.outcomeStatus] || statusMap.PENDING;
     return <span className={`badge ${info.className}`}>{info.label}</span>;
@@ -170,172 +163,134 @@ export default function PredictionsCrudPage({
 
   return (
     <div className="page-container">
-      {/* Banner explicativo para a avaliação do CRUD */}
-      <section className="eval-banner">
-        <div>
-          <h2>Painel de Demonstração do CRUD (PostgreSQL + Sequelize ORM)</h2>
-          <p>
-            Realize aqui as 4 operações avaliadas: <strong>Create (Cadastrar)</strong>,{' '}
-            <strong>Read (Consultar/Listar)</strong>, <strong>Update (Alterar)</strong> e{' '}
-            <strong>Delete (Excluir)</strong> diretamente conectadas ao banco{' '}
-            <code>palpitando_nfl</code>.
-          </p>
-        </div>
-        <a
-          href="http://localhost:3001/api-docs"
-          target="_blank"
-          rel="noreferrer"
-          className="btn btn-outline"
-        >
-          📚 Abrir Swagger API Docs
-        </a>
-      </section>
-
       <div className="crud-grid">
-        {/* ==================== CARD DE CREATE (CADASTRAR) ==================== */}
-        <section className="card crud-create-card" aria-labelledby="create-heading">
-          <div className="card-header">
-            <span className="crud-step-pill create-pill">CREATE • 0,5 pt</span>
-            <h3 id="create-heading">Cadastrar Novo Palpite</h3>
-          </div>
+        {/* Novo Palpite */}
+        <section className="card" aria-labelledby="create-heading">
+          <h2 id="create-heading" className="section-title">
+            Novo Palpite
+          </h2>
 
-          {!currentUser ? (
-            <p className="muted-text">
-              Selecione ou faça login com um usuário no topo da página para registrar palpites.
-            </p>
-          ) : (
-            <form onSubmit={handleCreateSubmit} className="crud-form">
-              <div className="form-group">
-                <label htmlFor="create-game-select">1. Escolha a Partida Aberta (Semana 10)</label>
-                <select
-                  id="create-game-select"
-                  value={selectedGameId}
-                  onChange={handleGameSelectionChange}
-                  required
-                >
-                  {openGames.length === 0 ? (
-                    <option value="">Nenhuma partida aberta no momento</option>
-                  ) : (
-                    openGames.map((g) => (
-                      <option key={g.id} value={g.id}>
-                        Semana {g.week}: {g.awayTeamAbbr} @ {g.homeTeamAbbr} ({g.awayTeam} vs{' '}
-                        {g.homeTeam})
-                      </option>
-                    ))
-                  )}
-                </select>
-                <small className="field-hint">
-                  RN01 / RN09: Apenas jogos com mais de 2 horas para o início estão disponíveis.
-                </small>
-              </div>
+          <form onSubmit={handleCreateSubmit} className="crud-form">
+            <div className="form-group">
+              <label htmlFor="create-game-select">Partida</label>
+              <select
+                id="create-game-select"
+                value={selectedGameId}
+                onChange={handleGameSelectionChange}
+                required
+              >
+                {openGames.length === 0 ? (
+                  <option value="">Nenhuma partida aberta no momento</option>
+                ) : (
+                  openGames.map((g) => (
+                    <option key={g.id} value={g.id}>
+                      Semana {g.week}: {g.awayTeamAbbr} @ {g.homeTeamAbbr} ({g.awayTeam} vs{' '}
+                      {g.homeTeam})
+                    </option>
+                  ))
+                )}
+              </select>
+            </div>
 
-              {selectedGame && (
-                <>
-                  <div className="form-group">
-                    <label>2. Selecione o Time Vencedor (RN04 - Sem empate)</label>
-                    <div className="winner-selector">
-                      <button
-                        type="button"
-                        className={`team-choice-btn ${
-                          predictedWinner === selectedGame.awayTeamAbbr ? 'selected' : ''
-                        }`}
-                        onClick={() => setPredictedWinner(selectedGame.awayTeamAbbr)}
-                      >
-                        <span className="team-abbr">{selectedGame.awayTeamAbbr}</span>
-                        <span className="team-name">{selectedGame.awayTeam} (Visitante)</span>
-                      </button>
+            {selectedGame && (
+              <>
+                <div className="form-group">
+                  <label>Time Vencedor</label>
+                  <div className="winner-selector">
+                    <button
+                      type="button"
+                      className={`team-choice-btn ${
+                        predictedWinner === selectedGame.awayTeamAbbr ? 'selected' : ''
+                      }`}
+                      onClick={() => setPredictedWinner(selectedGame.awayTeamAbbr)}
+                    >
+                      <span className="team-abbr">{selectedGame.awayTeamAbbr}</span>
+                      <span className="team-name">{selectedGame.awayTeam}</span>
+                    </button>
 
-                      <button
-                        type="button"
-                        className={`team-choice-btn ${
-                          predictedWinner === selectedGame.homeTeamAbbr ? 'selected' : ''
-                        }`}
-                        onClick={() => setPredictedWinner(selectedGame.homeTeamAbbr)}
-                      >
-                        <span className="team-abbr">{selectedGame.homeTeamAbbr}</span>
-                        <span className="team-name">{selectedGame.homeTeam} (Casa)</span>
-                      </button>
-                    </div>
+                    <button
+                      type="button"
+                      className={`team-choice-btn ${
+                        predictedWinner === selectedGame.homeTeamAbbr ? 'selected' : ''
+                      }`}
+                      onClick={() => setPredictedWinner(selectedGame.homeTeamAbbr)}
+                    >
+                      <span className="team-abbr">{selectedGame.homeTeamAbbr}</span>
+                      <span className="team-name">{selectedGame.homeTeam}</span>
+                    </button>
                   </div>
+                </div>
 
-                  <div className="form-row">
-                    <div className="form-group">
-                      <label htmlFor="create-away-score">
-                        Placar {selectedGame.awayTeamAbbr} (RN05 - Opcional)
-                      </label>
-                      <input
-                        id="create-away-score"
-                        type="number"
-                        min="0"
-                        max="99"
-                        placeholder="Ex: 24"
-                        value={predictedAwayScore}
-                        onChange={(e) => setPredictedAwayScore(e.target.value)}
-                      />
-                    </div>
-
-                    <div className="form-group">
-                      <label htmlFor="create-home-score">
-                        Placar {selectedGame.homeTeamAbbr} (RN05 - Opcional)
-                      </label>
-                      <input
-                        id="create-home-score"
-                        type="number"
-                        min="0"
-                        max="99"
-                        placeholder="Ex: 27"
-                        value={predictedHomeScore}
-                        onChange={(e) => setPredictedHomeScore(e.target.value)}
-                      />
-                    </div>
-                  </div>
-
+                <div className="form-row">
                   <div className="form-group">
-                    <label htmlFor="create-notes">Observação / Justificativa do Palpite</label>
+                    <label htmlFor="create-away-score">
+                      Placar {selectedGame.awayTeamAbbr} (Opcional)
+                    </label>
                     <input
-                      id="create-notes"
-                      type="text"
-                      placeholder="Ex: Ataque aéreo forte jogando em casa!"
-                      value={notes}
-                      onChange={(e) => setNotes(e.target.value)}
+                      id="create-away-score"
+                      type="number"
+                      min="0"
+                      max="99"
+                      placeholder="Ex: 24"
+                      value={predictedAwayScore}
+                      onChange={(e) => setPredictedAwayScore(e.target.value)}
                     />
                   </div>
 
-                  <div className="stadium-info-box">
-                    <p>
-                      <strong>🏟️ Estádio (REQ 018):</strong> {selectedGame.stadium}
-                    </p>
-                    <p>
-                      <strong>🩺 Boletim Médico (Lesões):</strong> {selectedGame.injuryReport}
-                    </p>
+                  <div className="form-group">
+                    <label htmlFor="create-home-score">
+                      Placar {selectedGame.homeTeamAbbr} (Opcional)
+                    </label>
+                    <input
+                      id="create-home-score"
+                      type="number"
+                      min="0"
+                      max="99"
+                      placeholder="Ex: 27"
+                      value={predictedHomeScore}
+                      onChange={(e) => setPredictedHomeScore(e.target.value)}
+                    />
                   </div>
-                </>
-              )}
+                </div>
 
-              <button
-                type="submit"
-                className="btn btn-primary btn-block"
-                disabled={!selectedGame}
-              >
-                ➕ Cadastrar Palpite (CREATE)
-              </button>
-            </form>
-          )}
+                <div className="form-group">
+                  <label htmlFor="create-notes">Observação</label>
+                  <input
+                    id="create-notes"
+                    type="text"
+                    placeholder="Comentário opcional sobre a partida"
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                  />
+                </div>
+
+                <div className="stadium-info-box">
+                  <p>
+                    <strong>Estádio:</strong> {selectedGame.stadium}
+                  </p>
+                  <p>
+                    <strong>Boletim Médico:</strong> {selectedGame.injuryReport}
+                  </p>
+                </div>
+              </>
+            )}
+
+            <button
+              type="submit"
+              className="btn btn-primary btn-block"
+              disabled={!selectedGame}
+            >
+              Salvar Palpite
+            </button>
+          </form>
         </section>
 
-        {/* ==================== CARD DE READ / UPDATE / DELETE ==================== */}
-        <section className="card crud-list-card" aria-labelledby="read-heading">
+        {/* Lista de Palpites */}
+        <section className="card" aria-labelledby="read-heading">
           <div className="card-header-flex">
-            <div>
-              <div className="pill-group">
-                <span className="crud-step-pill read-pill">READ • 0,5 pt</span>
-                <span className="crud-step-pill update-pill">UPDATE • 0,5 pt</span>
-                <span className="crud-step-pill delete-pill">DELETE • 0,5 pt</span>
-              </div>
-              <h3 id="read-heading">
-                Palpites Cadastrados no Banco ({filteredPredictions.length})
-              </h3>
-            </div>
+            <h2 id="read-heading" className="section-title">
+              Palpites Registrados ({filteredPredictions.length})
+            </h2>
 
             <div className="filter-bar">
               <select
@@ -344,9 +299,7 @@ export default function PredictionsCrudPage({
                 onChange={(e) => setFilterScope(e.target.value)}
               >
                 <option value="ALL">Todos os Usuários</option>
-                <option value="MINE">
-                  Apenas Meus Palpites ({currentUser ? currentUser.username : ''})
-                </option>
+                <option value="MINE">Meus Palpites</option>
               </select>
 
               <select
@@ -355,8 +308,8 @@ export default function PredictionsCrudPage({
                 onChange={(e) => setFilterWeek(e.target.value)}
               >
                 <option value="ALL">Todas as Semanas</option>
-                <option value="9">Semana 9 (Finalizada - Histórico)</option>
-                <option value="10">Semana 10 (Rodada Atual)</option>
+                <option value="9">Semana 9</option>
+                <option value="10">Semana 10</option>
               </select>
             </div>
           </div>
@@ -369,23 +322,23 @@ export default function PredictionsCrudPage({
           >
             <table className="responsive-data-table predictions-table">
               <caption id="predictions-table-caption" className="sr-only">
-                Lista de palpites registrados na plataforma com opções de editar e excluir
+                Lista de palpites registrados na plataforma
               </caption>
               <thead>
                 <tr>
-                  <th>ID / Usuário</th>
-                  <th>Confronto (Semana)</th>
-                  <th>Vencedor & Placar Previsto</th>
-                  <th>Status / Pontos</th>
+                  <th>Usuário</th>
+                  <th>Partida</th>
+                  <th>Palpite</th>
+                  <th>Resultado</th>
                   <th>Observação</th>
-                  <th>Ações (Update / Delete)</th>
+                  <th>Ações</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredPredictions.length === 0 ? (
                   <tr>
                     <td colSpan="6" className="empty-cell">
-                      Nenhum palpite encontrado para este filtro. Cadastre um novo ao lado!
+                      Nenhum palpite encontrado.
                     </td>
                   </tr>
                 ) : (
@@ -399,8 +352,7 @@ export default function PredictionsCrudPage({
                     return (
                       <tr key={pred.id}>
                         <th>
-                          <span className="record-id">#{pred.id}</span>{' '}
-                          <strong>{pred.user ? pred.user.username : `User #${pred.userId}`}</strong>
+                          <strong>{pred.user ? pred.user.username : `Usuário #${pred.userId}`}</strong>
                           {pred.user && (
                             <span className="sub-meta">
                               {pred.user.state} • {pred.user.favoriteTeam}
@@ -417,7 +369,7 @@ export default function PredictionsCrudPage({
                                 Semana {game.week} •{' '}
                                 {game.status === 'FINAL'
                                   ? `Final: ${game.awayScore} x ${game.homeScore}`
-                                  : new Date(game.kickoffTime).toLocaleString('pt-BR')}
+                                  : new Date(game.kickoffTime).toLocaleDateString('pt-BR')}
                               </span>
                             </>
                           ) : (
@@ -425,15 +377,14 @@ export default function PredictionsCrudPage({
                           )}
                         </td>
                         <td>
-                          <span className="winner-highlight">🏆 {pred.predictedWinner}</span>
+                          <span className="winner-highlight">{pred.predictedWinner}</span>
                           {pred.predictedHomeScore !== null && pred.predictedAwayScore !== null ? (
                             <span className="sub-meta">
-                              Placar Exato: {game ? game.awayTeamAbbr : 'VIS'}{' '}
-                              {pred.predictedAwayScore} x {pred.predictedHomeScore}{' '}
-                              {game ? game.homeTeamAbbr : 'CASA'}
+                              {game ? game.awayTeamAbbr : 'VIS'} {pred.predictedAwayScore} x{' '}
+                              {pred.predictedHomeScore} {game ? game.homeTeamAbbr : 'CASA'}
                             </span>
                           ) : (
-                            <span className="sub-meta">Sem placar exato</span>
+                            <span className="sub-meta">Apenas vencedor</span>
                           )}
                         </td>
                         <td>{renderOutcomeBadge(pred)}</td>
@@ -447,19 +398,18 @@ export default function PredictionsCrudPage({
                               disabled={isLocked}
                               title={
                                 isLocked
-                                  ? 'Bloqueado (RN01/RN09: menos de 2h para o jogo ou já finalizado)'
-                                  : 'Editar este palpite (UPDATE)'
+                                  ? 'Partida encerrada ou a menos de 2h do início'
+                                  : 'Editar palpite'
                               }
                             >
-                              ✏️ Editar
+                              Editar
                             </button>
                             <button
                               type="button"
                               className="btn btn-danger btn-sm"
                               onClick={() => openDeleteModal(pred)}
-                              title="Excluir este palpite do banco de dados (DELETE)"
                             >
-                              🗑️ Excluir
+                              Excluir
                             </button>
                           </div>
                         </td>
@@ -473,27 +423,22 @@ export default function PredictionsCrudPage({
         </section>
       </div>
 
-      {/* ==================== MODAL NATIVO <dialog> PARA UPDATE ==================== */}
+      {/* Modal de Edição */}
       <dialog
         ref={editDialogRef}
         aria-labelledby="edit-prediction-title"
         className="app-dialog"
       >
-        <h3 id="edit-prediction-title">
-          ✏️ Alterar Palpite #{editingPrediction ? editingPrediction.id : ''} (UPDATE)
-        </h3>
+        <h3 id="edit-prediction-title">Editar Palpite</h3>
         {editingPrediction && editingPrediction.game && (
           <form onSubmit={handleUpdateSubmit} className="crud-form">
             <p className="dialog-subtitle">
-              Confronto:{' '}
-              <strong>
-                {editingPrediction.game.awayTeam} ({editingPrediction.game.awayTeamAbbr}) @{' '}
-                {editingPrediction.game.homeTeam} ({editingPrediction.game.homeTeamAbbr})
-              </strong>
+              {editingPrediction.game.awayTeam} ({editingPrediction.game.awayTeamAbbr}) @{' '}
+              {editingPrediction.game.homeTeam} ({editingPrediction.game.homeTeamAbbr})
             </p>
 
             <div className="form-group">
-              <label>Time Vencedor Escolhido (RN04)</label>
+              <label>Time Vencedor</label>
               <div className="winner-selector">
                 <button
                   type="button"
@@ -548,7 +493,7 @@ export default function PredictionsCrudPage({
             </div>
 
             <div className="form-group">
-              <label htmlFor="edit-notes">Observação / Justificativa</label>
+              <label htmlFor="edit-notes">Observação</label>
               <input
                 id="edit-notes"
                 type="text"
@@ -558,34 +503,29 @@ export default function PredictionsCrudPage({
             </div>
 
             <div className="dialog-actions">
-              <button
-                type="button"
-                className="btn btn-outline"
-                onClick={closeEditModal}
-              >
+              <button type="button" className="btn btn-outline" onClick={closeEditModal}>
                 Cancelar
               </button>
               <button type="submit" className="btn btn-primary">
-                💾 Salvar Alterações (PUT)
+                Salvar Alterações
               </button>
             </div>
           </form>
         )}
       </dialog>
 
-      {/* ==================== MODAL NATIVO <dialog> PARA DELETE ==================== */}
+      {/* Modal de Exclusão */}
       <dialog
         ref={deleteDialogRef}
         aria-labelledby="delete-prediction-title"
         className="app-dialog"
       >
-        <h3 id="delete-prediction-title">🗑️ Confirmar Exclusão de Palpite (DELETE)</h3>
+        <h3 id="delete-prediction-title">Excluir Palpite</h3>
         {deletingPrediction && (
           <div>
             <p className="dialog-subtitle">
-              Tem certeza que deseja excluir permanentemente o palpite{' '}
-              <strong>#{deletingPrediction.id}</strong> (Vencedor:{' '}
-              <strong>{deletingPrediction.predictedWinner}</strong>) do banco de dados PostgreSQL?
+              Tem certeza que deseja excluir o palpite no vencedor{' '}
+              <strong>{deletingPrediction.predictedWinner}</strong>?
             </p>
             <div className="dialog-actions">
               <button
@@ -596,12 +536,8 @@ export default function PredictionsCrudPage({
               >
                 Cancelar
               </button>
-              <button
-                type="button"
-                className="btn btn-danger"
-                onClick={handleConfirmDelete}
-              >
-                Confirmar Exclusão (DELETE)
+              <button type="button" className="btn btn-danger" onClick={handleConfirmDelete}>
+                Excluir
               </button>
             </div>
           </div>

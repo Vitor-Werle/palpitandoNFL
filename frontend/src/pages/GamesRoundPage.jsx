@@ -10,7 +10,6 @@ export default function GamesRoundPage({
 }) {
   const [selectedWeek, setSelectedWeek] = useState('ALL');
 
-  // Formulário para criar novo jogo de teste
   const [week, setWeek] = useState(10);
   const [awayTeamAbbr, setAwayTeamAbbr] = useState('MIA');
   const [homeTeamAbbr, setHomeTeamAbbr] = useState('NYJ');
@@ -18,7 +17,6 @@ export default function GamesRoundPage({
   const [injuryReport, setInjuryReport] = useState('MIA: Sem baixas | NYJ: Aaron Rodgers (Provável)');
   const [hoursFromNow, setHoursFromNow] = useState(48);
 
-  // Modal de finalização/edição de placar oficial (RN14)
   const scoreDialogRef = useRef(null);
   const [targetGame, setTargetGame] = useState(null);
   const [modalStatus, setModalStatus] = useState('FINAL');
@@ -89,30 +87,28 @@ export default function GamesRoundPage({
 
   return (
     <div className="page-container">
-      <section className="eval-banner">
+      <div className="page-header-bar">
         <div>
-          <h2>Jogos da Rodada da NFL, Tendências & Homologação de Resultados</h2>
-          <p>
-            Exibição com fuso horário local (REQ 006), sincronização com API esportiva (REQ 007),
-            porcentagem de votos da comunidade (REQ 011), estádio e boletim médico (REQ 018).
+          <h2 className="section-title">Jogos da Rodada</h2>
+          <p className="muted-text">
+            Calendário de confrontos, tendência da comunidade e atualização de resultados.
           </p>
         </div>
-        <div className="header-btn-group">
+        <div className="filter-bar">
           <select
             aria-label="Filtrar semana dos jogos"
             value={selectedWeek}
             onChange={(e) => setSelectedWeek(e.target.value)}
-            className="week-select"
           >
             <option value="ALL">Todas as Semanas</option>
-            <option value="9">Semana 9 (Finalizada)</option>
-            <option value="10">Semana 10 (Atual)</option>
+            <option value="9">Semana 9</option>
+            <option value="10">Semana 10</option>
           </select>
           <button type="button" className="btn btn-primary" onClick={onSyncNflGames}>
-            🔄 Sincronizar Jogos via API NFL (REQ 007)
+            Sincronizar Jogos da NFL
           </button>
         </div>
-      </section>
+      </div>
 
       <div className="games-grid">
         {filteredGames.map((game) => {
@@ -128,7 +124,7 @@ export default function GamesRoundPage({
             <article key={game.id} className="card game-card">
               <div className="game-card-top">
                 <span className="week-tag">
-                  Semana {game.week} • Temporada {game.season}
+                  Semana {game.week} • {game.season}
                 </span>
                 <span
                   className={`status-pill ${
@@ -140,12 +136,12 @@ export default function GamesRoundPage({
                   }`}
                 >
                   {game.status === 'FINAL'
-                    ? '🏁 ENCERRADO'
+                    ? 'Encerrado'
                     : game.status === 'POSTPONED'
-                    ? '⏸️ ADIADO (RN07)'
+                    ? 'Adiado'
                     : game.isLocked
-                    ? '🔒 BLOQUEADO (< 2h - RN01)'
-                    : '🟢 ABERTO PARA PALPITES'}
+                    ? 'Fechado'
+                    : 'Aberto'}
                 </span>
               </div>
 
@@ -171,15 +167,14 @@ export default function GamesRoundPage({
                 </div>
               </div>
 
-              {/* Barra de Tendência da Comunidade (REQ 011) */}
               <div className="trend-section">
                 <div className="trend-labels">
                   <span>
-                    {game.awayTeamAbbr}: {trends.awayPercentage}% ({trends.awayVotes} voto(s))
+                    {game.awayTeamAbbr}: {trends.awayPercentage}% ({trends.awayVotes})
                   </span>
-                  <span>Tendência da Comunidade (REQ 011)</span>
+                  <span>Tendência de Votos</span>
                   <span>
-                    {game.homeTeamAbbr}: {trends.homePercentage}% ({trends.homeVotes} voto(s))
+                    {game.homeTeamAbbr}: {trends.homePercentage}% ({trends.homeVotes})
                   </span>
                 </div>
                 <div className="trend-bar">
@@ -196,14 +191,13 @@ export default function GamesRoundPage({
 
               <div className="game-meta">
                 <p>
-                  <strong>🕒 Início (Fuso Local):</strong>{' '}
-                  {new Date(game.kickoffTime).toLocaleString('pt-BR')}
+                  <strong>Horário:</strong> {new Date(game.kickoffTime).toLocaleString('pt-BR')}
                 </p>
                 <p>
-                  <strong>🏟️ Estádio:</strong> {game.stadium}
+                  <strong>Estádio:</strong> {game.stadium}
                 </p>
                 <p>
-                  <strong>🩺 Boletim de Lesões (Injury Report):</strong> {game.injuryReport}
+                  <strong>Boletim Médico:</strong> {game.injuryReport}
                 </p>
               </div>
 
@@ -213,14 +207,14 @@ export default function GamesRoundPage({
                   className="btn btn-edit btn-sm"
                   onClick={() => openScoreModal(game)}
                 >
-                  ⚙️ Homologar Placar / Status (RN14)
+                  Definir Resultado
                 </button>
                 <button
                   type="button"
                   className="btn btn-danger btn-sm"
                   onClick={() => onDeleteGame(game.id)}
                 >
-                  🗑️ Excluir Jogo
+                  Excluir
                 </button>
               </div>
             </article>
@@ -228,9 +222,8 @@ export default function GamesRoundPage({
         })}
       </div>
 
-      {/* Formulário auxiliar para cadastrar um confronto personalizado */}
-      <section className="card create-game-section">
-        <h3>➕ Cadastrar Nova Partida de Teste (CRUD de Jogos)</h3>
+      <section className="card">
+        <h3 className="section-title">Adicionar Nova Partida</h3>
         <form onSubmit={handleCreateGameSubmit} className="crud-form">
           <div className="form-row-4">
             <div className="form-group">
@@ -247,7 +240,7 @@ export default function GamesRoundPage({
             </div>
 
             <div className="form-group">
-              <label htmlFor="game-away">Time Visitante</label>
+              <label htmlFor="game-away">Visitante</label>
               <select
                 id="game-away"
                 value={awayTeamAbbr}
@@ -262,7 +255,7 @@ export default function GamesRoundPage({
             </div>
 
             <div className="form-group">
-              <label htmlFor="game-home">Time da Casa</label>
+              <label htmlFor="game-home">Casa</label>
               <select
                 id="game-home"
                 value={homeTeamAbbr}
@@ -277,7 +270,7 @@ export default function GamesRoundPage({
             </div>
 
             <div className="form-group">
-              <label htmlFor="game-hours">Início daqui a (horas)</label>
+              <label htmlFor="game-hours">Início em (horas)</label>
               <input
                 id="game-hours"
                 type="number"
@@ -290,7 +283,7 @@ export default function GamesRoundPage({
 
           <div className="form-row">
             <div className="form-group">
-              <label htmlFor="game-stadium">Estádio (REQ 018)</label>
+              <label htmlFor="game-stadium">Estádio</label>
               <input
                 id="game-stadium"
                 type="text"
@@ -300,7 +293,7 @@ export default function GamesRoundPage({
               />
             </div>
             <div className="form-group">
-              <label htmlFor="game-injury">Boletim Médico / Lesões (REQ 018)</label>
+              <label htmlFor="game-injury">Boletim Médico</label>
               <input
                 id="game-injury"
                 type="text"
@@ -311,32 +304,33 @@ export default function GamesRoundPage({
             </div>
           </div>
 
-          <button type="submit" className="btn btn-primary">
-            ➕ Cadastrar Confronto no PostgreSQL
-          </button>
+          <div>
+            <button type="submit" className="btn btn-primary">
+              Adicionar Partida
+            </button>
+          </div>
         </form>
       </section>
 
-      {/* Modal nativo <dialog> para homologar placar oficial da partida (RN14) */}
       <dialog ref={scoreDialogRef} aria-labelledby="score-dialog-title" className="app-dialog">
-        <h3 id="score-dialog-title">🏁 Homologar Resultado da Partida (RN14)</h3>
+        <h3 id="score-dialog-title">Resultado da Partida</h3>
         {targetGame && (
           <form onSubmit={handleSaveOfficialResult} className="crud-form">
             <p className="dialog-subtitle">
-              Ao finalizar a partida, o sistema recalculará automaticamente os pontos de todos os
-              palpites (+1 acerto, -1 erro, +3 placar exato, 0 empate).
+              {targetGame.awayTeam} ({targetGame.awayTeamAbbr}) @ {targetGame.homeTeam} (
+              {targetGame.homeTeamAbbr})
             </p>
 
             <div className="form-group">
-              <label htmlFor="modal-game-status">Status da Partida</label>
+              <label htmlFor="modal-game-status">Status</label>
               <select
                 id="modal-game-status"
                 value={modalStatus}
                 onChange={(e) => setModalStatus(e.target.value)}
               >
-                <option value="FINAL">FINAL (Partida Encerrada - Calcula Pontos)</option>
-                <option value="SCHEDULED">SCHEDULED (Reabrir Partida Agendada)</option>
-                <option value="POSTPONED">POSTPONED (Adiada/Suspensa - RN07)</option>
+                <option value="FINAL">Encerrado (Final)</option>
+                <option value="SCHEDULED">Agendado</option>
+                <option value="POSTPONED">Adiado</option>
               </select>
             </div>
 
@@ -344,7 +338,7 @@ export default function GamesRoundPage({
               <div className="form-row">
                 <div className="form-group">
                   <label htmlFor="modal-away-score">
-                    Placar Final {targetGame.awayTeamAbbr} (Visitante)
+                    Placar {targetGame.awayTeamAbbr}
                   </label>
                   <input
                     id="modal-away-score"
@@ -358,7 +352,7 @@ export default function GamesRoundPage({
                 </div>
                 <div className="form-group">
                   <label htmlFor="modal-home-score">
-                    Placar Final {targetGame.homeTeamAbbr} (Casa)
+                    Placar {targetGame.homeTeamAbbr}
                   </label>
                   <input
                     id="modal-home-score"
@@ -378,7 +372,7 @@ export default function GamesRoundPage({
                 Cancelar
               </button>
               <button type="submit" className="btn btn-primary">
-                💾 Salvar Resultado e Atualizar Ranking
+                Salvar Resultado
               </button>
             </div>
           </form>

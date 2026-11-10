@@ -6,7 +6,6 @@ export default function RankingPage({ currentUser, refreshTrigger }) {
   const [rankingList, setRankingList] = useState([]);
   const [filterState, setFilterState] = useState('ALL');
   const [filterTeam, setFilterTeam] = useState('ALL');
-  const [includeIneligible, setIncludeIneligible] = useState(false);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -14,7 +13,7 @@ export default function RankingPage({ currentUser, refreshTrigger }) {
     fetchRanking({
       state: filterState,
       favoriteTeam: filterTeam,
-      includeIneligible
+      includeIneligible: true
     })
       .then((data) => {
         setRankingList(data);
@@ -25,31 +24,26 @@ export default function RankingPage({ currentUser, refreshTrigger }) {
       .finally(() => {
         setLoading(false);
       });
-  }, [filterState, filterTeam, includeIneligible, refreshTrigger]);
+  }, [filterState, filterTeam, refreshTrigger]);
 
   return (
     <div className="page-container">
-      <section className="eval-banner">
-        <div>
-          <h2>🏆 Classificação Geral da Temporada (Top 100 - RN11 a RN15 / REQ 014)</h2>
-          <p>
-            Pontuação calculada automaticamente: <strong>+1 pt</strong> por acerto de vencedor
-            (RN02), <strong>-1 pt</strong> por erro (RN02.1), <strong>+3 pts extras</strong> por
-            placar exato (RN06) e <strong>0 pt</strong> em caso de empate (RN03).
-          </p>
-        </div>
-      </section>
-
       <section className="card">
         <div className="card-header-flex">
-          <h3>Filtros de Classificação (RN13)</h3>
+          <div>
+            <h2 className="section-title">Classificação Geral</h2>
+            <p className="muted-text">
+              +1 ponto por vencedor correto • -1 ponto por erro • +3 pontos bônus por placar exato
+            </p>
+          </div>
+
           <div className="filter-bar">
             <select
               aria-label="Filtrar ranking por Estado UF"
               value={filterState}
               onChange={(e) => setFilterState(e.target.value)}
             >
-              <option value="ALL">🌎 Todos os Estados (Ranking Geral)</option>
+              <option value="ALL">Todos os Estados</option>
               {BRAZIL_STATES.map((uf) => (
                 <option key={uf} value={uf}>
                   Estado: {uf}
@@ -62,22 +56,13 @@ export default function RankingPage({ currentUser, refreshTrigger }) {
               value={filterTeam}
               onChange={(e) => setFilterTeam(e.target.value)}
             >
-              <option value="ALL">🏈 Todos os Times da NFL</option>
+              <option value="ALL">Todos os Times</option>
               {NFL_TEAMS.map((t) => (
                 <option key={t.abbr} value={t.abbr}>
-                  Torcedores: {t.abbr} ({t.name})
+                  {t.abbr} - {t.name}
                 </option>
               ))}
             </select>
-
-            <label className="checkbox-inline">
-              <input
-                type="checkbox"
-                checked={includeIneligible}
-                onChange={(e) => setIncludeIneligible(e.target.checked)}
-              />
-              Exibir cadastrados após início da temporada (RN15)
-            </label>
           </div>
         </div>
 
@@ -89,16 +74,16 @@ export default function RankingPage({ currentUser, refreshTrigger }) {
         >
           <table className="responsive-data-table ranking-table">
             <caption id="ranking-table-caption" className="sr-only">
-              Tabela de classificação dos 100 melhores colocados na plataforma Palpitando NFL
+              Tabela de classificação da plataforma Palpitando NFL
             </caption>
             <thead>
               <tr>
                 <th>Posição / Usuário</th>
-                <th>Estado (UF)</th>
-                <th>Time do Coração</th>
+                <th>Estado</th>
+                <th>Time Favorito</th>
                 <th>Acertos / Erros</th>
-                <th>Placares Exatos (+3)</th>
-                <th>Pontuação Total</th>
+                <th>Placares Exatos</th>
+                <th>Pontuação</th>
               </tr>
             </thead>
             <tbody>
@@ -117,18 +102,14 @@ export default function RankingPage({ currentUser, refreshTrigger }) {
               ) : (
                 rankingList.map((u, index) => {
                   const isCurrentUser = currentUser && currentUser.id === u.id;
-                  const medal =
-                    index === 0 ? '🥇 1º' : index === 1 ? '🥈 2º' : index === 2 ? '🥉 3º' : `${index + 1}º`;
+                  const posLabel = `${index + 1}º`;
 
                   return (
                     <tr key={u.id} className={isCurrentUser ? 'highlight-row' : ''}>
                       <th>
-                        <span className="rank-pos">{medal}</span>{' '}
+                        <span className="rank-pos">{posLabel}</span>{' '}
                         <strong>{u.username}</strong>
                         {isCurrentUser && <span className="you-tag">Você</span>}
-                        {!u.eligibleForRanking && (
-                          <span className="sub-meta">(Fora do Ranking Oficial - RN15)</span>
-                        )}
                       </th>
                       <td>{u.state}</td>
                       <td>
@@ -138,7 +119,7 @@ export default function RankingPage({ currentUser, refreshTrigger }) {
                         <span className="text-success">{u.hits} V</span> /{' '}
                         <span className="text-danger">{u.misses} D</span>
                       </td>
-                      <td>🎯 {u.exactScores}</td>
+                      <td>{u.exactScores}</td>
                       <td>
                         <strong className="points-total">{u.points} pts</strong>
                       </td>

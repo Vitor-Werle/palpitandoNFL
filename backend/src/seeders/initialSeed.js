@@ -42,36 +42,6 @@ function seedInitialData() {
               eligibleForRanking: true,
               isVerified: true,
               verificationCode: 'NFL-4949'
-            },
-            {
-              username: 'lucas_packers',
-              email: 'lucas@nfl.com',
-              passwordHash,
-              state: 'PR',
-              favoriteTeam: 'GB',
-              eligibleForRanking: true,
-              isVerified: true,
-              verificationCode: 'NFL-1212'
-            },
-            {
-              username: 'marina_ravens',
-              email: 'marina@nfl.com',
-              passwordHash,
-              state: 'MG',
-              favoriteTeam: 'BAL',
-              eligibleForRanking: true,
-              isVerified: true,
-              verificationCode: 'NFL-8888'
-            },
-            {
-              username: 'pedro_bills',
-              email: 'pedro@nfl.com',
-              passwordHash,
-              state: 'SP',
-              favoriteTeam: 'BUF',
-              eligibleForRanking: false, // RN15: Cadastrado após início da temporada
-              isVerified: true,
-              verificationCode: 'NFL-1717'
             }
           ],
           { returning: true }
@@ -81,12 +51,12 @@ function seedInitialData() {
         if (!createdUsers) return null;
 
         const now = Date.now();
-        const pastGame1 = new Date(now - 7 * 24 * 60 * 60 * 1000); // Semana passada
-        const pastGame2 = new Date(now - 6 * 24 * 60 * 60 * 1000); // Semana passada
-        const futureOpen1 = new Date(now + 48 * 60 * 60 * 1000); // Daqui a 48h (Aberto para palpites!)
-        const futureOpen2 = new Date(now + 52 * 60 * 60 * 1000); // Daqui a 52h (Aberto para palpites!)
-        const futureOpen3 = new Date(now + 72 * 60 * 60 * 1000); // Daqui a 72h (Aberto para palpites!)
-        const lockedSoon = new Date(now + 60 * 60 * 1000); // Daqui a 1h (< 2h, demonstra bloqueio RN01/RN09!)
+        const pastGame1 = new Date(now - 7 * 24 * 60 * 60 * 1000);
+        const pastGame2 = new Date(now - 6 * 24 * 60 * 60 * 1000);
+        const futureOpen1 = new Date(now + 48 * 60 * 60 * 1000);
+        const futureOpen2 = new Date(now + 52 * 60 * 60 * 1000);
+        const futureOpen3 = new Date(now + 72 * 60 * 60 * 1000);
+        const lockedSoon = new Date(now + 60 * 60 * 1000);
 
         return Game.bulkCreate(
           [
@@ -182,17 +152,16 @@ function seedInitialData() {
         if (!seedBundle) return null;
         const { createdUsers, createdGames } = seedBundle;
 
-        const [vitor, ana, lucas, marina] = createdUsers;
-        const [game1, game2, game3, game4] = createdGames;
+        const [vitor, ana] = createdUsers;
+        const [game1, game2, game3] = createdGames;
 
         return Prediction.bulkCreate([
-          // Palpites da Semana 9 (Já finalizados, para exibir pontuação e histórico RN02, RN02.1, RN06)
           {
             userId: vitor.id,
             gameId: game1.id,
             predictedWinner: 'KC',
             predictedHomeScore: 27,
-            predictedAwayScore: 20, // Placar exato! (+1 vencedor +3 placar exato = +4 pts)
+            predictedAwayScore: 20,
             notes: 'Mahomes garante em casa com placar cravado!'
           },
           {
@@ -200,7 +169,7 @@ function seedInitialData() {
             gameId: game2.id,
             predictedWinner: 'SF',
             predictedHomeScore: 28,
-            predictedAwayScore: 21, // Acertou vencedor (+1 pt)
+            predictedAwayScore: 21,
             notes: '49ers dominam na Califórnia.'
           },
           {
@@ -208,41 +177,24 @@ function seedInitialData() {
             gameId: game1.id,
             predictedWinner: 'BAL',
             predictedHomeScore: 21,
-            predictedAwayScore: 24, // Errou vencedor (-1 pt - RN02.1)
-            notes: 'Apostando na zebra visitante.'
+            predictedAwayScore: 24,
+            notes: 'Apostando no visitante.'
           },
           {
             userId: ana.id,
             gameId: game2.id,
             predictedWinner: 'SF',
             predictedHomeScore: 30,
-            predictedAwayScore: 24, // Placar exato! (+4 pts)
-            notes: 'Meu time do coração não decepciona!'
+            predictedAwayScore: 24,
+            notes: 'Vitória dos 49ers em casa!'
           },
-          {
-            userId: lucas.id,
-            gameId: game1.id,
-            predictedWinner: 'KC',
-            predictedHomeScore: 24,
-            predictedAwayScore: 17, // Acertou vencedor (+1 pt)
-            notes: 'Defesa do Chiefs segura o jogo.'
-          },
-          {
-            userId: marina.id,
-            gameId: game2.id,
-            predictedWinner: 'DAL',
-            predictedHomeScore: 17,
-            predictedAwayScore: 24, // Errou vencedor (-1 pt)
-            notes: 'Tentando vitória fora de casa.'
-          },
-          // Palpites abertos da Semana 10 (Prontos para demonstrar Read, Update e Delete na hora!)
           {
             userId: vitor.id,
             gameId: game3.id,
             predictedWinner: 'KC',
             predictedHomeScore: 24,
             predictedAwayScore: 27,
-            notes: 'Clássico da AFC! Palpite aberto para edição/exclusão.'
+            notes: 'Clássico da AFC!'
           },
           {
             userId: ana.id,
@@ -251,14 +203,6 @@ function seedInitialData() {
             predictedHomeScore: 28,
             predictedAwayScore: 24,
             notes: 'Josh Allen joga em casa.'
-          },
-          {
-            userId: lucas.id,
-            gameId: game4.id,
-            predictedWinner: 'PHI',
-            predictedHomeScore: 26,
-            predictedAwayScore: 23,
-            notes: 'Eagles fortes no Lincoln Financial Field.'
           }
         ]);
       })

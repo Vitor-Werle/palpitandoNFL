@@ -1,10 +1,6 @@
 const { Prediction, Game, User } = require('../models');
 const { evaluatePredictionOutcome, recalculateAllScores } = require('../utils/scoring');
 
-/**
- * Verifica RN01 e RN09: O usuário não poderá registrar ou modificar palpites com menos de
- * 2 horas de antecedência em relação ao início da partida.
- */
 function isGameLockedForPredictions(kickoffTime, status) {
   if (status && status !== 'SCHEDULED') {
     return true;
@@ -15,9 +11,6 @@ function isGameLockedForPredictions(kickoffTime, status) {
   return diffInHours < 2;
 }
 
-/**
- * READ - Listar todos os palpites (com filtro opcional por userId, gameId ou week)
- */
 exports.getAllPredictions = (req, res) => {
   const { userId, gameId, week } = req.query;
   const whereClause = {};
@@ -55,9 +48,6 @@ exports.getAllPredictions = (req, res) => {
     });
 };
 
-/**
- * READ BY ID - Consultar um único palpite pelo ID
- */
 exports.getPredictionById = (req, res) => {
   const { id } = req.params;
 
@@ -81,22 +71,18 @@ exports.getPredictionById = (req, res) => {
     });
 };
 
-/**
- * CREATE - Cadastrar um novo palpite (REQ 008 e REQ 009)
- */
 exports.createPrediction = (req, res) => {
   const { userId, gameId, predictedWinner, predictedHomeScore, predictedAwayScore, notes } = req.body;
 
   if (!userId || !gameId || !predictedWinner) {
     return res.status(400).json({
-      message: 'Campos obrigatórios: userId, gameId e predictedWinner (RN04).'
+      message: 'Selecione a partida e o time vencedor.'
     });
   }
 
-  // RN04: Sem opção de aposta em empate
   if (['TIE', 'EMPATE', 'DRAW'].includes(String(predictedWinner).toUpperCase())) {
     return res.status(400).json({
-      message: 'RN04: O usuário deverá selecionar estritamente um time vencedor, sem opção de aposta em empate.'
+      message: 'Selecione estritamente um time vencedor, sem opção de aposta em empate.'
     });
   }
 
@@ -111,19 +97,17 @@ exports.createPrediction = (req, res) => {
       }
       targetGame = game;
 
-      // Valida se o time escolhido pertence ao confronto
       if (predictedWinner !== game.homeTeamAbbr && predictedWinner !== game.awayTeamAbbr) {
         const err = new Error(
-          `RN04: O time vencedor escolhido (${predictedWinner}) deve ser ${game.homeTeamAbbr} ou ${game.awayTeamAbbr}.`
+          `O time vencedor escolhido (${predictedWinner}) deve ser ${game.homeTeamAbbr} ou ${game.awayTeamAbbr}.`
         );
         err.statusCode = 400;
         throw err;
       }
 
-      // RN01 e RN09: Bloqueio automático 2 horas antes do jogo
       if (isGameLockedForPredictions(game.kickoffTime, game.status)) {
         const err = new Error(
-          'RN01 / RN09: Não é permitido registrar palpites com menos de 2 horas para o início da partida ou após seu encerramento.'
+          'Não é permitido registrar palpites com menos de 2 horas para o início da partida ou após seu encerramento.'
         );
         err.statusCode = 400;
         throw err;
@@ -134,7 +118,7 @@ exports.createPrediction = (req, res) => {
     .then((existingPrediction) => {
       if (existingPrediction) {
         const err = new Error(
-          'Você já possui um palpite cadastrado para esta partida. Utilize a opção Editar (Update) para alterá-lo.'
+          'Você já possui um palpite registrado para esta partida. Utilize a opção Editar para alterá-lo.'
         );
         err.statusCode = 409;
         throw err;
@@ -181,7 +165,7 @@ exports.createPrediction = (req, res) => {
     })
     .then((fullPrediction) => {
       res.status(201).json({
-        message: 'Palpite cadastrado com sucesso no PostgreSQL!',
+        message: 'Palpite cadastrado com sucesso!',
         prediction: fullPrediction
       });
     })
@@ -194,14 +178,9 @@ exports.createPrediction = (req, res) => {
     });
 };
 
-/**
- * UPDATE - Atualizar um palpite existente (REQ 010)
- */
 exports.updatePrediction = (req, res) => {
   const { id } = req.params;
   const { predictedWinner, predictedHomeScore, predictedAwayScore, notes } = req.body;
-
-  let foundPrediction = null;
 
   Prediction.findByPk(id, {
     include: [{ model: Game, as: 'game' }]
@@ -212,15 +191,13 @@ exports.updatePrediction = (req, res) => {
         err.statusCode = 404;
         throw err;
       }
-      foundPrediction = prediction;
 
-      // RN01 e RN09: Verifica se o jogo ainda permite edição (mais de 2h antes do início)
       if (
         prediction.game &&
         isGameLockedForPredictions(prediction.game.kickoffTime, prediction.game.status)
       ) {
         const err = new Error(
-          'RN01 / RN09: Edição bloqueada! Faltam menos de 2 horas para o início do jogo ou a partida já foi encerrada.'
+          'Edição bloqueada! Faltam menos de 2 horas para o início do jogo ou a partida já foi encerrada.'
         );
         err.statusCode = 400;
         throw err;
@@ -228,7 +205,7 @@ exports.updatePrediction = (req, res) => {
 
       const nextWinner = predictedWinner || prediction.predictedWinner;
       if (['TIE', 'EMPATE', 'DRAW'].includes(String(nextWinner).toUpperCase())) {
-        const err = new Error('RN04: Não é permitido apostar em empate.');
+        const err = new Error('Não é permitido apostar em empate.');
         err.statusCode = 400;
         throw err;
       }
@@ -302,9 +279,6 @@ exports.updatePrediction = (req, res) => {
     });
 };
 
-/**
- * DELETE - Excluir/cancelar um palpite pelo ID (REQ 010)
- */
 exports.deletePrediction = (req, res) => {
   const { id } = req.params;
 
@@ -322,7 +296,7 @@ exports.deletePrediction = (req, res) => {
     })
     .then(() => {
       res.status(200).json({
-        message: 'Palpite excluído com sucesso do banco de dados!'
+        message: 'Palpite excluído com sucesso!'
       });
     })
     .catch((error) => {
