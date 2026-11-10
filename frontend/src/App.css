@@ -1,0 +1,854 @@
+:root {
+  --nfl-navy: #013369;
+  --nfl-navy-dark: #001f42;
+  --nfl-red: #d50a0a;
+  --bg-page: #f3f6fb;
+  --bg-card: #ffffff;
+  --text-main: #0f172a;
+  --text-muted: #475569;
+  --border-color: #cbd5e1;
+  --success: #15803d;
+  --warning: #b45309;
+  --danger: #b91c1c;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  background-color: var(--bg-page);
+  color: var(--text-main);
+  line-height: 1.5;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.app-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ==================== NAVBAR ==================== */
+.navbar {
+  background: linear-gradient(135deg, var(--nfl-navy-dark), var(--nfl-navy));
+  color: #ffffff;
+  padding: 0.85rem 1.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  box-shadow: 0 3px 12px rgba(1, 51, 105, 0.25);
+}
+
+.navbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.brand-badge {
+  background-color: var(--nfl-red);
+  color: #ffffff;
+  font-weight: 800;
+  padding: 0.45rem 0.65rem;
+  border-radius: 8px;
+  letter-spacing: 0.5px;
+}
+
+.navbar-brand h1 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.brand-subtitle {
+  margin: 0;
+  font-size: 0.78rem;
+  opacity: 0.85;
+}
+
+.navbar-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.nav-btn {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 0.5rem 0.9rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: background 0.15s ease;
+}
+
+.nav-btn:hover {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.nav-btn.active {
+  background: #ffffff;
+  color: var(--nfl-navy);
+  border-color: #ffffff;
+}
+
+.user-Controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.user-select {
+  padding: 0.45rem 0.65rem;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  background: #ffffff;
+  color: var(--text-main);
+  font-weight: 600;
+}
+
+/* ==================== LAYOUT & CARDS ==================== */
+.main-content {
+  flex: 1;
+  max-width: 1360px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 1.25rem;
+}
+
+.page-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.eval-banner {
+  background: #ffffff;
+  border-left: 6px solid var(--nfl-navy);
+  border-radius: 10px;
+  padding: 1rem 1.25rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.06);
+}
+
+.eval-banner h2 {
+  margin: 0 0 0.25rem 0;
+  font-size: 1.15rem;
+  color: var(--nfl-navy);
+}
+
+.eval-banner p {
+  margin: 0;
+  font-size: 0.92rem;
+  color: var(--text-muted);
+}
+
+.crud-grid {
+  display: grid;
+  grid-template-columns: 380px 1fr;
+  gap: 1.25rem;
+  align-items: start;
+}
+
+@media (max-width: 1024px) {
+  .crud-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.card {
+  background: var(--bg-card);
+  border-radius: 10px;
+  padding: 1.25rem;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05);
+}
+
+.card h3 {
+  margin: 0.35rem 0 0.75rem 0;
+  color: var(--nfl-navy);
+}
+
+.card-header-flex {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.pill-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.crud-step-pill {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 0.2rem 0.55rem;
+  border-radius: 99px;
+  text-transform: uppercase;
+}
+
+.create-pill {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.read-pill {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.update-pill {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.delete-pill {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+/* ==================== FORMS & BUTTONS ==================== */
+.crud-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.form-group label {
+  font-weight: 600;
+  font-size: 0.88rem;
+  color: var(--text-main);
+}
+
+.form-group input,
+.form-group select {
+  padding: 0.55rem 0.7rem;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  font-size: 0.92rem;
+}
+
+.field-hint {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.form-row-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+}
+
+.form-row-4 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.75rem;
+}
+
+@media (max-width: 700px) {
+  .form-row,
+  .form-row-3,
+  .form-row-4 {
+    grid-template-columns: 1fr;
+  }
+}
+
+.winner-selector {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.65rem;
+}
+
+.team-choice-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.65rem;
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  background: #f8fafc;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.team-choice-btn.selected {
+  border-color: var(--nfl-navy);
+  background: #eff6ff;
+  box-shadow: 0 0 0 2px rgba(1, 51, 105, 0.15);
+}
+
+.team-abbr {
+  font-weight: 800;
+  font-size: 1.1rem;
+  color: var(--nfl-navy);
+}
+
+.team-name {
+  font-size: 0.76rem;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.stadium-info-box {
+  background: #f8fafc;
+  border-left: 3px solid var(--nfl-navy);
+  padding: 0.55rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.82rem;
+}
+
+.stadium-info-box p {
+  margin: 0.2rem 0;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 0.55rem 1rem;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  border: 1px solid transparent;
+  text-decoration: none;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-block {
+  width: 100%;
+}
+
+.btn-sm {
+  padding: 0.35rem 0.65rem;
+  font-size: 0.82rem;
+}
+
+.btn-primary {
+  background: var(--nfl-navy);
+  color: #ffffff;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--nfl-navy-dark);
+}
+
+.btn-edit {
+  background: #fef3c7;
+  color: #92400e;
+  border-color: #fde68a;
+}
+
+.btn-danger {
+  background: #fee2e2;
+  color: #991b1b;
+  border-color: #fecaca;
+}
+
+.btn-outline {
+  background: #ffffff;
+  color: var(--nfl-navy);
+  border-color: var(--nfl-navy);
+}
+
+.action-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.filter-bar select {
+  padding: 0.45rem 0.65rem;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+}
+
+/* ==================== RESPONSIVE TABLE (modern-web-guidance: responsive-table) ==================== */
+.table-wrapper {
+  overflow: auto;
+  max-inline-size: 100%;
+  max-block-size: min(560px, 80vh);
+  container-type: inline-size;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+}
+
+.responsive-data-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.9rem;
+}
+
+.responsive-data-table thead {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 2;
+  background: #f1f5f9;
+}
+
+.responsive-data-table th,
+.responsive-data-table td {
+  padding: 0.75rem 0.85rem;
+  text-align: left;
+  border-bottom: 1px solid #e2e8f0;
+  vertical-align: middle;
+}
+
+.responsive-data-table tbody th {
+  position: sticky;
+  inset-inline-start: 0;
+  background: #ffffff;
+  z-index: 1;
+}
+
+.predictions-table {
+  --label-2: 'Confronto';
+  --label-3: 'Palpite';
+  --label-4: 'Status';
+  --label-5: 'Observação';
+  --label-6: 'Ações';
+}
+
+.ranking-table {
+  --label-2: 'Estado (UF)';
+  --label-3: 'Time Favorito';
+  --label-4: 'Acertos / Erros';
+  --label-5: 'Placares Exatos';
+  --label-6: 'Pontuação Total';
+}
+
+@container (width < 640px) {
+  .responsive-data-table,
+  .responsive-data-table thead,
+  .responsive-data-table tbody,
+  .responsive-data-table tr,
+  .responsive-data-table th,
+  .responsive-data-table td {
+    display: block;
+  }
+
+  .responsive-data-table thead {
+    display: none;
+  }
+
+  .responsive-data-table tr {
+    margin-block-end: 1rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+  }
+
+  .responsive-data-table tbody th {
+    position: sticky;
+    inset-block-start: 0;
+    z-index: 2;
+    background: #f1f5f9;
+  }
+
+  .responsive-data-table td:nth-child(2)::before {
+    content: var(--label-2) ': ';
+    font-weight: 700;
+  }
+  .responsive-data-table td:nth-child(3)::before {
+    content: var(--label-3) ': ';
+    font-weight: 700;
+  }
+  .responsive-data-table td:nth-child(4)::before {
+    content: var(--label-4) ': ';
+    font-weight: 700;
+  }
+  .responsive-data-table td:nth-child(5)::before {
+    content: var(--label-5) ': ';
+    font-weight: 700;
+  }
+  .responsive-data-table td:nth-child(6)::before {
+    content: var(--label-6) ': ';
+    font-weight: 700;
+  }
+}
+
+.record-id {
+  color: var(--nfl-navy);
+  font-weight: 700;
+}
+
+.sub-meta {
+  display: block;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+.winner-highlight {
+  font-weight: 700;
+  color: var(--nfl-navy);
+}
+
+.badge {
+  display: inline-block;
+  padding: 0.25rem 0.6rem;
+  border-radius: 99px;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.badge-pending {
+  background: #e2e8f0;
+  color: #334155;
+}
+
+.badge-hit {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.badge-exact {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.badge-miss {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.badge-neutral {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+/* ==================== GAMES GRID ==================== */
+.games-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: 1.15rem;
+}
+
+.game-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.game-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.week-tag {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.status-pill {
+  font-size: 0.74rem;
+  font-weight: 800;
+  padding: 0.2rem 0.55rem;
+  border-radius: 99px;
+}
+
+.status-open {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.status-locked {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.status-final {
+  background: #e2e8f0;
+  color: #1e293b;
+}
+
+.matchup-box {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 0.5rem;
+  background: #f8fafc;
+  padding: 0.85rem;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.team-side h4 {
+  margin: 0.25rem 0 0 0;
+  font-size: 0.92rem;
+}
+
+.team-badge {
+  display: inline-block;
+  background: var(--nfl-navy);
+  color: #ffffff;
+  font-weight: 800;
+  padding: 0.3rem 0.65rem;
+  border-radius: 6px;
+}
+
+.team-badge.home {
+  background: var(--nfl-red);
+}
+
+.official-score {
+  display: block;
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--nfl-navy);
+  margin-top: 0.25rem;
+}
+
+.vs-divider {
+  font-weight: 800;
+  color: var(--text-muted);
+}
+
+.trend-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.trend-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.trend-bar {
+  height: 10px;
+  border-radius: 99px;
+  overflow: hidden;
+  display: flex;
+  background: #e2e8f0;
+}
+
+.trend-fill-away {
+  background: var(--nfl-navy);
+}
+
+.trend-fill-home {
+  background: var(--nfl-red);
+}
+
+.game-meta {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+.game-meta p {
+  margin: 0.25rem 0;
+}
+
+.game-card-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-top: auto;
+}
+
+/* ==================== NATIVE <dialog> (modern-web-guidance: dialog) ==================== */
+dialog.app-dialog {
+  border: none;
+  border-radius: 12px;
+  padding: 1.5rem;
+  max-width: 480px;
+  width: 92%;
+  box-shadow: 0 20px 40px rgba(15, 23, 42, 0.3);
+}
+
+dialog:modal {
+  overscroll-behavior: contain;
+}
+
+dialog::backdrop {
+  background: rgba(15, 23, 42, 0.55);
+  overflow: hidden;
+  overscroll-behavior: contain;
+}
+
+.dialog-subtitle {
+  color: var(--text-muted);
+  font-size: 0.92rem;
+  margin-top: 0;
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.65rem;
+  margin-top: 1.25rem;
+}
+
+/* ==================== TOAST & METRICS ==================== */
+.toast-notification {
+  position: fixed;
+  bottom: 1.25rem;
+  right: 1.25rem;
+  z-index: 50;
+  padding: 0.85rem 1.15rem;
+  border-radius: 8px;
+  color: #ffffff;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.25);
+}
+
+.toast-success {
+  background: var(--success);
+}
+
+.toast-error {
+  background: var(--danger);
+}
+
+.toast-info {
+  background: var(--nfl-navy);
+}
+
+.toast-close {
+  background: transparent;
+  border: none;
+  color: #ffffff;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.connection-banner {
+  background: #fee2e2;
+  color: #991b1b;
+  padding: 0.75rem 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 600;
+}
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.85rem;
+  margin-top: 0.75rem;
+}
+
+.metric-box {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 0.85rem;
+  text-align: center;
+}
+
+.metric-label {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.metric-value {
+  font-size: 1.5rem;
+  color: var(--nfl-navy);
+}
+
+.text-success {
+  color: var(--success);
+}
+
+.text-danger {
+  color: var(--danger);
+}
+
+.highlight-row th,
+.highlight-row td {
+  background: #eff6ff !important;
+}
+
+.you-tag {
+  background: var(--nfl-navy);
+  color: #ffffff;
+  font-size: 0.7rem;
+  padding: 0.1rem 0.45rem;
+  border-radius: 99px;
+  margin-left: 0.4rem;
+}
+
+.checkbox-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.88rem;
+  cursor: pointer;
+}
+
+.section-divider {
+  border: 0;
+  border-top: 1px solid #e2e8f0;
+  margin: 1.25rem 0;
+}
+
+.app-footer {
+  text-align: center;
+  padding: 1rem;
+  background: #ffffff;
+  border-top: 1px solid #e2e8f0;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
